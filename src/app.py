@@ -1,72 +1,53 @@
-"""
-This module takes care of starting the API Server, Loading the DB and Adding the endpoints
-"""
 import os
-from flask import Flask, request, jsonify, url_for, send_from_directory
+from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_migrate import Migrate
-from flask_swagger import swagger
-from api.utils import APIException, generate_sitemap
+from flask_jwt_extended import JWTManager
 from api.models import db
 from api.routes import api
-from api.admin import setup_admin
-from api.commands import setup_commands
+from dotenv import load_dotenv
 
-# from models import Person
+def create_app():
+    load_dotenv()
+    app = Flask(__name__)
 
-ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
-static_file_dir = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), '../dist/')
-app = Flask(__name__)
-app.url_map.strict_slashes = False
+    db_url = os.getenv("DATABASE_URL", "sqlite:///app.db").strip()
+    if db_url.startswith("http://") or db_url.startswith("https://"):
+        db_url = "sqlite:///app.db"
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# database condiguration
-db_url = os.getenv("DATABASE_URL")
-if db_url is not None:
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace(
-        "postgres://", "postgresql://")
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/test.db"
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "cambia-esto")
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-MIGRATE = Migrate(app, db, compare_type=True)
-db.init_app(app)
+    # 👇 CORS abierto y permitiendo Authorization
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": "*"}},
+        supports_credentials=False,
+        allow_headers=["Content-Type", "Authorization"],
+        expose_headers=["Authorization"],
+    )
 
-# add the admin
-setup_admin(app)
+    # 👇 JWT explícito (evita 422 por encabezado inesperado)
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+    app.config["JWT_HEADER_NAME"] = "Authorization"
+    app.config["JWT_HEADER_TYPE"] = "Bearer"
 
-# add the admin
-setup_commands(app)
+    db.init_app(app)
+    Migrate(app, db)
+    JWTManager(app)
 
-# Add all endpoints form the API with a "api" prefix
-app.register_blueprint(api, url_prefix='/api')
+    app.register_blueprint(api, url_prefix="/api")
 
-# Handle/serialize errors like a JSON object
+    @app.route("/")
+    def root():
+        return jsonify({"ok": True, "routes": ["/api/signup", "/api/token", "/api/private"]})
 
+    return app
 
-@app.errorhandler(APIException)
-def handle_invalid_usage(error):
-    return jsonify(error.to_dict()), error.status_code
+app = create_app()
 
-# generate sitemap with all your endpoints
-
-
-@app.route('/')
-def sitemap():
-    if ENV == "development":
-        return generate_sitemap(app)
-    return send_from_directory(static_file_dir, 'index.html')
-
-# any other endpoint will try to serve it like a static file
-@app.route('/<path:path>', methods=['GET'])
-def serve_any_other_file(path):
-    if not os.path.isfile(os.path.join(static_file_dir, path)):
-        path = 'index.html'
-    response = send_from_directory(static_file_dir, path)
-    response.cache_control.max_age = 0  # avoid cache memory
-    return response
-
-
-# this only runs if `$ python src/main.py` is executed
-if __name__ == '__main__':
-    PORT = int(os.environ.get('PORT', 3001))
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 3001)), debug=True)

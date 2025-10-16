@@ -1,0 +1,66 @@
+:root{
+  --bg:#0b1020;
+  --panel:#121a33;
+  --panel-2:#0f1730;
+  --text:#e8eeff;
+  --muted:#9fb3ffbb;
+  --primary:#4c7dff;
+  --danger:#ff6b6b;
+  --ring:#5f86ff;
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color:var(--text);
+  background: radial-gradient(1200px 800px at 70% -10%, #1a2a6c22 0%, transparent 60%), var(--bg);
+}
+
+a{ color:var(--primary); text-decoration:none }
+a:hover{ text-decoration:underline }
+
+.nav{
+  display:flex; gap:.75rem; align-items:center;
+  padding:14px 18px; border-bottom:1px solid #233259; background:linear-gradient(180deg,#0f17302e,transparent);
+}
+.nav a, .nav button{
+  color:var(--text); background:transparent; border:0; padding:8px 12px; border-radius:10px; cursor:pointer;
+}
+.nav button:hover, .nav a:hover{ background:#ffffff12 }
+
+.container{ max-width:880px; margin:28px auto; padding:0 18px }
+
+.card{
+  background:linear-gradient(180deg, var(--panel), var(--panel-2));
+  border:1px solid #22335c; border-radius:16px; padding:22px; box-shadow:0 15px 30px #00000040, inset 0 1px 0 #ffffff10;
+}
+
+h1,h2{ margin:0 0 12px }
+.subtitle{ color:var(--muted); margin:0 0 22px }
+
+.form{
+  display:flex; flex-direction:column; gap:14px; margin-top:10px;
+}
+.label{ font-size:.9rem; color:#bcd0ff }
+.input{
+  width:100%; padding:12px 14px; border-radius:12px;
+  background:#0d1530; border:1px solid #243456; color:var(--text);
+  outline:none; transition:border .15s, box-shadow .15s, transform .04s;
+}
+.input:focus{ border-color:var(--ring); box-shadow:0 0 0 3px #5f86ff40 }
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 16px; border-radius:12px; border:1px solid #2b3d6c;
+  background:linear-gradient(180deg,#5f86ff,#3466ff); color:white; cursor:pointer; font-weight:600;
+  box-shadow:0 8px 20px #1e2e5e66, inset 0 1px 0 #ffffff66;
+}
+.btn:hover{ filter:brightness(1.03) }
+.btn:active{ transform:translateY(1px) }
+.btn-outline{ background:transparent; border-color:#2b3d6c; color:#dbe3ff }
+.row{ display:flex; gap:12px; align-items:center; }
+.error{ color:var(--danger); background:#ff6b6b18; border:1px solid #ff6b6b55; padding:10px 12px; border-radius:10px }
+.ok{ color:#76ffa8; background:#76ffa818; border:1px solid #76ffa855; padding:10px 12px; border-radius:10px }
+.muted{ color:#b5c6ff80; font-size:.9rem }
+.center{ text-align:center }
